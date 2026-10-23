@@ -1,4 +1,4 @@
-# LinkGuard 🔍
+# LinkGuard 
 
 LinkGuard is a web application that analyzes URL structures and identifies potential risk indicators using rule-based scoring.
 
