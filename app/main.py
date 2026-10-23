@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from app.url_analyzer import analyze_url, calculate_risk
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="LinkGuard API",
@@ -10,6 +11,13 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class URLRequest(BaseModel):
     url: str = Field(min_length=1, max_length=2048)
