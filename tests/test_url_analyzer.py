@@ -1,7 +1,7 @@
 
 import pytest
 
-from app.url_analyzer import analyze_url
+from app.url_analyzer import analyze_url, calculate_risk
 
 
 def test_analyzes_normal_https_url():
@@ -46,3 +46,30 @@ def test_rejects_empty_url():
 def test_rejects_invalid_port():
     with pytest.raises(ValueError):
         analyze_url("https://example.com:abc/")
+
+
+def test_calculates_risk_for_ip_address():
+    analysis = analyze_url("http://192.0.2.1/login")
+    result = calculate_risk(analysis)
+
+    assert result["score"] == 60
+    assert result["level"] == "high"
+    assert len(result["reasons"]) == 2
+
+
+def test_calculates_low_risk_for_normal_https_url():
+
+    analysis = analyze_url("https://example.com/login")
+    result = calculate_risk(analysis)
+
+    assert result["score"] == 0
+    assert result["level"] == "low"
+    assert result["reasons"] == []
+
+def test_calculates_risk_for_at_character():
+    analysis = analyze_url("https://example.com@evil.test/login")
+    result = calculate_risk(analysis)
+
+    assert result["score"] == 20
+    assert result["level"] == "low"
+    assert "URL contains an @ character (+20)" in result["reasons"]

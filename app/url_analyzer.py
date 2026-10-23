@@ -67,6 +67,87 @@ def analyze_url(url: str) -> dict:
     }
 
 
+def calculate_risk(analysis: dict) -> dict:
+    """Calculate an illustrative risk score from URL indicators."""
+
+    score = 0
+    reasons = []
+
+    if analysis["host_is_ip"]:
+        score += 40
+        reasons.append("Hostname is an IP address (+40)")
+
+    if not analysis["https"]:
+        score += 20
+        reasons.append("URL does not use HTTPS (+20)")
+
+    if analysis["url_length"] > 100:
+        score += 10
+        reasons.append("URL is unusually long (+10)")
+
+    if "URL contains an @ character" in analysis["indicators"]:
+        score += 20
+        reasons.append("URL contains an @ character (+20)")
+
+
+    score = min(score, 100)
+
+    if score >= 60:
+        level = "high"
+    elif score >= 30:
+        level = "medium"
+    else:
+        level = "low"
+
+    return {
+        "score": score,
+        "level": level,
+        "reasons": reasons,
+        "warning": (
+            "This score is based on simple structural rules. "
+            "It does not prove whether a URL is malicious."
+        ),
+    }
+
+
 if __name__ == "__main__":
-    sample_url = "https://example.com/login"
-    print(analyze_url(sample_url))
+    print("=== LinkGuard URL Analyzer ===")
+    print("Enter a URL to analyze. Type 'exit' to quit.")
+
+    while True:
+        sample_url = input("\nURL: ").strip()
+
+        if sample_url.lower() == "exit":
+            print("LinkGuard closed.")
+            break
+
+        try:
+            analysis = analyze_url(sample_url)
+            risk = calculate_risk(analysis)
+
+            print("\n=== Analysis Result ===")
+            print(f"Hostname: {analysis['hostname']}")
+            print(f"HTTPS: {analysis['https']}")
+            print(f"Risk score: {risk['score']}/100")
+            print(f"Risk level: {risk['level'].upper()}")
+
+            print("Indicators:")
+            if analysis["indicators"]:
+                for indicator in analysis["indicators"]:
+                    print(f"- {indicator}")
+            else:
+                print("- No structural indicators detected.")
+
+            print("Reasons:")
+            if risk["reasons"]:
+                for reason in risk["reasons"]:
+                    print(f"- {reason}")
+            else:
+                print("- No risk rules matched.")
+
+            print(f"Warning: {risk['warning']}")
+
+        except ValueError as exc:
+            print(f"Invalid URL: {exc}")
+
+
